@@ -269,7 +269,20 @@ tbody tr:hover td{background:#fafbfc}
 
 /* REGISTER */
 .reg-outer{flex:1;overflow-y:auto;padding:24px;display:flex;justify-content:center;align-items:flex-start}
-.reg-wrap{width:100%;max-width:860px}
+.reg-layout{display:flex;gap:16px;width:100%;max-width:1300px;align-items:flex-start}
+.reg-wrap{flex:0 0 620px;width:100%;max-width:620px}
+.reg-plist{flex:1;min-width:260px;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--sh-md);display:flex;flex-direction:column;max-height:calc(100vh - 100px)}
+.reg-plist-hd{padding:14px 18px;font-size:13.5px;font-weight:700;color:var(--ink);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--stripe);flex-shrink:0}
+.reg-plist-cnt{margin-left:auto;background:var(--brand);color:#fff;border-radius:20px;padding:2px 9px;font-size:11px;font-family:var(--mono);font-weight:700}
+.reg-plist-body{overflow-y:auto;flex:1}
+.reg-plist-empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:13px}
+.reg-plist-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f3f4f6;transition:background .11s}
+.reg-plist-item:last-child{border:none}
+.reg-plist-item:hover{background:var(--bg2)}
+.reg-plist-av{width:34px;height:34px;border-radius:9px;background:var(--brand-l);color:var(--brand);font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)}
+.reg-plist-info{flex:1;min-width:0}
+.reg-plist-name{font-size:13px;font-weight:600;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reg-plist-meta{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px}
 .reg-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--sh-md)}
 .reg-hd{background:linear-gradient(120deg,#1a3a6c 0%,#1a56db 100%);padding:22px 26px;color:#fff}
 .reg-hdtit{font-size:21px;font-weight:800}
@@ -435,6 +448,9 @@ tbody tr:hover td{background:#fafbfc}
   .queue-grid{grid-template-columns:1fr}
   .analytics-grid{grid-template-columns:1fr}
   .fgrid3,.fgrid2{grid-template-columns:1fr 1fr}
+  .reg-layout{flex-direction:column}
+  .reg-wrap{flex:none;max-width:100%}
+  .reg-plist{max-height:400px}
 }
 @media(max-width:640px){
   .sb{width:52px;min-width:52px}
@@ -1063,7 +1079,7 @@ function QueuePage({ patients, onStatusChange }) {
 
 // ─── SCHEDULE PAGE ────────────────────────────────────────────────────────────
 
-function SchedulePage({ patients, onSelect }) {
+function SchedulePage({ patients, onSelect, onAdd }) {
   const [selDept, setSelDept] = useState(DEPARTMENTS[0]);
   const [selDate, setSelDate] = useState(todayStr());
 
@@ -1114,7 +1130,7 @@ function SchedulePage({ patients, onSelect }) {
                         {p.lastName} {p.firstName[0]}.
                       </button>
                     ) : (
-                      <div className="sch-empty">+ запись</div>
+                      <div className="sch-empty" onClick={()=>onAdd(selDept, doc, selDate, time)}>+ запись</div>
                     )}
                   </div>
                 );
@@ -1244,12 +1260,14 @@ const EMPTY_FORM = {
   department:"",doctor:"",appointmentDate:"",appointmentTime:"",complaint:"",
 };
 
-function RegisterPage({ patients, onRegister }) {
-  const [step, setStep]       = useState(1);
-  const [form, setForm]       = useState(EMPTY_FORM);
+function RegisterPage({ patients, onRegister, initForm, onInitUsed }) {
+  const [step, setStep]       = useState(initForm ? 2 : 1);
+  const [form, setForm]       = useState(initForm ? { ...EMPTY_FORM, ...initForm } : EMPTY_FORM);
   const [errors, setErrors]   = useState({});
   const [done, setDone]       = useState(null);
   const [dupWarn, setDupWarn] = useState(false);
+
+  useEffect(() => { if (initForm && onInitUsed) onInitUsed(); }, []);
 
   const change = e => {
     const { name, value } = e.target;
@@ -1316,6 +1334,7 @@ function RegisterPage({ patients, onRegister }) {
 
   return (
     <div className="reg-outer">
+      <div className="reg-layout">
       <div className="reg-wrap">
         <div className="reg-card">
           <div className="reg-hd">
@@ -1483,6 +1502,31 @@ function RegisterPage({ patients, onRegister }) {
           </div>
         </div>
       </div>
+
+      <div className="reg-plist">
+        <div className="reg-plist-hd">
+          <ClipboardList size={15} color="var(--brand)" /> Зарегистрированные пациенты
+          <span className="reg-plist-cnt">{patients.length}</span>
+        </div>
+        <div className="reg-plist-body">
+          {patients.length === 0 ? (
+            <div className="reg-plist-empty">Нет записей</div>
+          ) : (
+            patients.map(p => (
+              <div key={p.id} className="reg-plist-item">
+                <div className="reg-plist-av">{p.lastName[0]}{p.firstName[0]}</div>
+                <div className="reg-plist-info">
+                  <div className="reg-plist-name">{p.lastName} {p.firstName} {p.middleName}</div>
+                  <div className="reg-plist-meta">{p.department} · {fmtDate(p.appointmentDate)} {p.appointmentTime}</div>
+                </div>
+                <StatusBadge status={p.status}/>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      </div>
     </div>
   );
 }
@@ -1515,11 +1559,14 @@ export default function App() {
     return () => document.removeEventListener("mousedown", fn);
   }, [showNotif]);
 
-  const handleRegister    = p  => { setPatients(prev=>[p,...prev]); go("dashboard"); };
+  const [regInit, setRegInit] = useState(null);
+
+  const handleRegister    = p  => { setPatients(prev=>[p,...prev]); };
   const handleDelete      = id => { if(window.confirm("Удалить запись?")) setPatients(prev=>prev.filter(p=>p.id!==id)); };
   const handleStatusChange= (id,s) => setPatients(prev=>prev.map(p=>p.id===id?{...p,status:s}:p));
   const handleUpdate      = upd => setPatients(prev=>prev.map(p=>p.id===upd.id?upd:p));
   const markAllRead       = () => setNotifs(prev=>prev.map(n=>({...n,read:true})));
+  const handleScheduleAdd = (dept, doc, date, time) => { setRegInit({ department: dept, doctor: doc, appointmentDate: date, appointmentTime: time }); go("register"); };
 
   const sharedProps = { patients, onDelete:handleDelete, onStatusChange:handleStatusChange, onUpdate:handleUpdate };
 
@@ -1550,14 +1597,14 @@ export default function App() {
           )}
           {page==="schedule" && (
             <div className="page">
-              <SchedulePage patients={patients} onSelect={p=>setSearchSel(p)}/>
+              <SchedulePage patients={patients} onSelect={p=>setSearchSel(p)} onAdd={handleScheduleAdd}/>
             </div>
           )}
           {page==="analytics" && (
             <div className="page"><AnalyticsPage patients={patients}/></div>
           )}
           {page==="register" && (
-            <RegisterPage patients={patients} onRegister={handleRegister}/>
+            <RegisterPage patients={patients} onRegister={handleRegister} initForm={regInit} onInitUsed={()=>setRegInit(null)}/>
           )}
         </div>
       </div>
