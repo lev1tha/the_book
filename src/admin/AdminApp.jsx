@@ -1,15 +1,14 @@
 import { useState, useEffect } from "react";
-import { db, isConfigured } from "../firebase";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { useHashRouter } from "../hooks/useRouter";
 import { usePersistedState } from "../hooks/useLocalStorage";
-import { MOCK_PATIENTS, INIT_NOTIFS } from "../constants/clinic";
+import { INIT_NOTIFS } from "../constants/clinic";
+import { api } from "../api";
 import "./admin.css";
 
-import Sidebar     from "./components/Sidebar";
-import Topbar      from "./components/Topbar";
+import Sidebar      from "./components/Sidebar";
+import Topbar       from "./components/Topbar";
 import GlobalSearch from "./components/GlobalSearch";
-import NotifPanel  from "./components/NotifPanel";
+import NotifPanel   from "./components/NotifPanel";
 
 import DashboardPage from "./pages/DashboardPage";
 import PatientsPage  from "./pages/PatientsPage";
@@ -19,41 +18,57 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import RegisterPage  from "./pages/RegisterPage";
 
 export default function AdminApp() {
-  const [page, navigate]   = useHashRouter();
-  const [patients, setPatients] = usePersistedState("clinic_patients", MOCK_PATIENTS);
-  const [notifs, setNotifs]     = usePersistedState("clinic_notifs",   INIT_NOTIFS);
+  const [page, navigate]    = useHashRouter();
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [notifs, setNotifs]     = usePersistedState("clinic_notifs", INIT_NOTIFS);
   const [searchOpen, setSearchOpen] = useState(false);
   const [notifOpen,  setNotifOpen]  = useState(false);
   const [initForm,   setInitForm]   = useState(null);
 
-  // Firebase real-time sync
+  // Загрузка пациентов из MySQL при старте
   useEffect(() => {
-    if (!isConfigured || !db) return;
-    const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
-    return onSnapshot(q, snap => {
-      snap.docChanges().forEach(change => {
-        if (change.type !== "added") return;
-        const d = change.doc.data();
-        const id = "fb_" + change.doc.id;
-        setPatients(prev => {
-          if (prev.some(p => p.id === id)) return prev;
-          const newPt = { ...d, id, gender: d.gender || "unknown", iin: d.iin || "", address: d.address || "", queueNum: 0 };
-          setNotifs(n => [{ id: Date.now(), type: "booking", msg: `Онлайн запись: ${d.lastName} ${d.firstName} — ${d.department}`, time: "только что", read: false }, ...n]);
-          return [newPt, ...prev];
-        });
-      });
-    });
+    api.getPatients()
+      .then(data => setPatients(data))
+      .catch(() => setPatients([]))
+      .finally(() => setLoading(false));
   }, []);
 
-  const handleRegister = pt => {
-    setPatients(p => [pt, ...p]);
-    setNotifs(n => [{ id: Date.now(), type: "register", msg: `Зарегистрирован: ${pt.lastName} ${pt.firstName}`, time: "только что", read: false }, ...n]);
+  const handleRegister = async pt => {
+    try {
+      await api.addPatient(pt);
+      setPatients(p => [pt, ...p]);
+      setNotifs(n => [{
+        id: Date.now(), type: "ok",
+        title: "Новая запись",
+        body: `${pt.lastName} ${pt.firstName} — ${pt.department}`,
+        time: "только что", read: false,
+      }, ...n]);
+    } catch (e) {
+      alert("Ошибка сохранения: " + e.message);
+    }
   };
 
-  const handleDelete       = id  => setPatients(p => p.filter(x => x.id !== id));
-  const handleStatusChange = (id, s) => setPatients(p => p.map(x => x.id === id ? { ...x, status: s } : x));
-  const handleUpdate       = upd => setPatients(p => p.map(x => x.id === upd.id ? upd : x));
-  const markRead           = ()  => setNotifs(n => n.map(x => ({ ...x, read: true })));
+  const handleDelete = async id => {
+    try {
+      await api.deletePatient(id);
+      setPatients(p => p.filter(x => x.id !== id));
+    } catch (e) {
+      alert("Ошибка удаления: " + e.message);
+    }
+  };
+
+  const handleStatusChange = async (id, status) => {
+    try {
+      await api.updateStatus(id, status);
+      setPatients(p => p.map(x => x.id === id ? { ...x, status } : x));
+    } catch (e) {
+      alert("Ошибка обновления: " + e.message);
+    }
+  };
+
+  const handleUpdate = upd => setPatients(p => p.map(x => x.id === upd.id ? upd : x));
+  const markRead     = ()  => setNotifs(n => n.map(x => ({ ...x, read: true })));
 
   const openRegisterWithForm = (dept, doc, date, time) => {
     setInitForm({ department: dept, doctor: doc, appointmentDate: date, appointmentTime: time });
@@ -71,11 +86,12 @@ export default function AdminApp() {
   };
 
   const renderPage = () => {
+    if (loading) return <div style={{ padding: 40, color: "var(--muted)", fontSize: 14 }}>Загрузка...</div>;
     switch (page) {
       case "dashboard":  return <DashboardPage {...pageProps} />;
       case "patients":   return <PatientsPage  {...pageProps} />;
       case "queue":      return <QueuePage     patients={patients} onStatusChange={handleStatusChange} />;
-      case "schedule":   return <SchedulePage  patients={patients} onSelect={p => { navigate("patients"); }} onAdd={openRegisterWithForm} />;
+      case "schedule":   return <SchedulePage  patients={patients} onSelect={() => navigate("patients")} onAdd={openRegisterWithForm} />;
       case "analytics":  return <AnalyticsPage patients={patients} />;
       case "register":   return (
         <RegisterPage

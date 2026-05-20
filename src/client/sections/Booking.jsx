@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Calendar, CheckCircle, Send } from "lucide-react";
 import { useI18n } from "../../i18n";
-import { db, isConfigured } from "../../firebase";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { api } from "../../api";
 import { DEPARTMENTS, DOCTORS_BY_DEPT, TIME_SLOTS } from "../../constants/clinic";
 import { todayStr, fmtDate } from "../../utils/helpers";
 
@@ -57,13 +56,10 @@ export default function Booking({ bookRef }) {
   const submit = async () => {
     setLoading(true);
     try {
-      if (isConfigured && db) {
-        await addDoc(collection(db, "bookings"), { ...form, status: "confirmed", source: "online", createdAt: serverTimestamp() });
-      }
-      const saved = JSON.parse(localStorage.getItem("clinic_patients") || "[]");
-      const newPt = { id: "online_" + Date.now(), ...form, gender: "unknown", iin: "", address: "", status: "confirmed", queueNum: 0, source: "online" };
-      localStorage.setItem("clinic_patients", JSON.stringify([newPt, ...saved]));
-    } catch {}
+      await api.createBooking(form);
+    } catch (e) {
+      console.error("Booking error:", e.message);
+    }
     setDone(true);
     setLoading(false);
   };
