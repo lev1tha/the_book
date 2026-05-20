@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Heart, Menu, X } from "lucide-react";
+import { Heart, Menu, X, User } from "lucide-react";
 import { useI18n } from "../../i18n";
 
 function LangSwitcher() {
@@ -15,7 +15,7 @@ function LangSwitcher() {
   );
 }
 
-export default function NavBar({ activeSection, onBook, onAdmin }) {
+export default function NavBar({ activeSection, onBook, onAdmin, onPortal }) {
   const { t } = useI18n();
   const [scrolled,    setScrolled]    = useState(false);
   const [mobileOpen,  setMobileOpen]  = useState(false);
@@ -63,6 +63,7 @@ export default function NavBar({ activeSection, onBook, onAdmin }) {
           <div className="cl-nav-right">
             <LangSwitcher />
             <button className="cl-nav-book-btn" onClick={onBook}>{t("nav.booking")}</button>
+            <button className="cl-nav-portal-btn" onClick={onPortal}><User size={14} /> Личный кабинет</button>
             <button className={`cl-nav-admin${scrolled ? " dark" : ""}`} onClick={onAdmin}>{t("nav.adminPanel")}</button>
             <button className="cl-menu-btn" onClick={() => setMobileOpen(v => !v)}>
               {mobileOpen ? <X size={22} /> : <Menu size={22} />}

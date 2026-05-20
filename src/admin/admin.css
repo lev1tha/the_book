@@ -73,6 +73,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--ink2); -web
 .tb-ndot { position: absolute; top: 7px; right: 7px; width: 6px; height: 6px; border-radius: 50%; background: #ef4444; border: 1.5px solid #fff; }
 .tb-btn { display: flex; align-items: center; gap: 6px; background: var(--brand); color: #fff; border: none; border-radius: 8px; padding: 0 14px; height: 34px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font); transition: background .14s; white-space: nowrap; }
 .tb-btn:hover { background: var(--brand-d); }
+.tb-icon--logout:hover { color: #ef4444; border-color: #fecaca; background: #fef2f2; }
 .tb-search { display: flex; align-items: center; gap: 7px; border: 1px solid var(--border); border-radius: 8px; padding: 0 12px; height: 34px; cursor: pointer; color: var(--muted); font-size: 13px; background: var(--bg2); transition: all .14s; min-width: 180px; }
 .tb-search:hover { border-color: var(--brand); background: #fff; }
 .tb-kbd { font-size: 10px; font-family: var(--mono); background: var(--bg); border: 1px solid var(--border2); border-radius: 4px; padding: 1px 5px; margin-left: auto; }

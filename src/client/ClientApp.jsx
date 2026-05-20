@@ -17,7 +17,8 @@ export default function ClientApp() {
   const [activeSection, setActiveSection] = useState("hero");
 
   const scrollToBook  = () => document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" });
-  const goAdmin       = () => { window.location.hash = "#/dashboard"; };
+  const goAdmin       = () => { window.location.hash = "login"; };
+  const goPortal      = () => { window.location.hash = "login"; };
 
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -30,7 +31,7 @@ export default function ClientApp() {
 
   return (
     <>
-      <NavBar   activeSection={activeSection} onBook={scrollToBook} onAdmin={goAdmin} />
+      <NavBar   activeSection={activeSection} onBook={scrollToBook} onAdmin={goAdmin} onPortal={goPortal} />
       <Hero     onBook={scrollToBook} />
       <About />
       <Services onBook={scrollToBook} />

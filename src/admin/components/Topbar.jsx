@@ -1,4 +1,5 @@
-import { Search, Bell, Plus, ChevronRight } from "lucide-react";
+import { Search, Bell, Plus, ChevronRight, LogOut } from "lucide-react";
+import { getUser } from "../../auth/auth";
 
 const PAGE_TITLES = {
   dashboard: "Дашборд",
@@ -9,7 +10,8 @@ const PAGE_TITLES = {
   register:  "Регистрация пациента",
 };
 
-export default function Topbar({ page, go, notifCount, onNotif, onSearch }) {
+export default function Topbar({ page, go, notifCount, onNotif, onSearch, onLogout }) {
+  const user    = getUser();
   const dateStr = new Date().toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
 
   return (
@@ -33,6 +35,11 @@ export default function Topbar({ page, go, notifCount, onNotif, onSearch }) {
         {page !== "register" && (
           <button className="tb-btn" onClick={() => go("register")}>
             <Plus size={14} /> Пациент
+          </button>
+        )}
+        {onLogout && (
+          <button className="tb-icon tb-icon--logout" title={`Выйти (${user?.name ?? ""})`} onClick={onLogout}>
+            <LogOut size={15} />
           </button>
         )}
       </div>

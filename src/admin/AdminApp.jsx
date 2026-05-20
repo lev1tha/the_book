@@ -17,7 +17,7 @@ import SchedulePage  from "./pages/SchedulePage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import RegisterPage  from "./pages/RegisterPage";
 
-export default function AdminApp() {
+export default function AdminApp({ onLogout }) {
   const [page, navigate]    = useHashRouter();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading]   = useState(true);
@@ -116,6 +116,7 @@ export default function AdminApp() {
             notifCount={unread}
             onNotif={() => setNotifOpen(v => !v)}
             onSearch={() => setSearchOpen(true)}
+            onLogout={onLogout}
           />
           {notifOpen && (
             <NotifPanel
