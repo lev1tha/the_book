@@ -1,5 +1,5 @@
 import { DEPARTMENTS, STATUS_CFG } from "../../constants/clinic";
-import { todayStr } from "../../utils/helpers";
+import { todayStr, ymd } from "../../utils/helpers";
 
 const DEPT_COLORS = ["#3b82f6","#8b5cf6","#f59e0b","#22c55e","#ef4444","#14b8a6","#f97316","#ec4899"];
 const COMPLAINTS  = ["Боль в груди","Температура","Головная боль","Плановый осмотр","Боли в спине","Слабость","Кашель","Давление","Боль в животе"];
@@ -15,7 +15,7 @@ export default function AnalyticsPage({ patients }) {
 
   const days = Array.from({ length: 7 }, (_, i) => {
     const d   = new Date(today); d.setDate(d.getDate() - (6 - i));
-    const str = d.toISOString().split("T")[0];
+    const str = ymd(d);
     return { str, cnt: patients.filter(p => p.appointmentDate === str).length, lbl: d.toLocaleDateString("ru-RU", { weekday: "short" }) };
   });
   const maxDay = Math.max(...days.map(d => d.cnt), 1);

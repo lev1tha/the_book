@@ -10,6 +10,10 @@ const pool = mysql.createPool({
   connectionLimit:    10,
   decimalNumbers:     true,
   multipleStatements: false,
+  // Возвращать DATE/DATETIME как строки "YYYY-MM-DD", а не JS Date.
+  // Иначе DATE сериализуется в JSON как ISO со сдвигом TZ ("...T..Z"),
+  // что ломает и отображение дат, и сравнения вида appointmentDate === todayStr().
+  dateStrings:        true,
 });
 
 // SET NAMES utf8mb4 на каждом новом соединении

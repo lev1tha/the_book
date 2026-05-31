@@ -61,8 +61,8 @@ export default function LoginPage({ onLogin }) {
     setError(""); setLoading(true);
     try {
       const user = await api.loginPatient(patient.iin, patient.phone);
-      setUser({ ...user, iin: patient.iin, phone: patient.phone });
-      onLogin({ ...user, iin: patient.iin, phone: patient.phone });
+      setUser(user);
+      onLogin(user);
     } catch (err) {
       setError(err.message);
     } finally {

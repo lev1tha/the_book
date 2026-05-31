@@ -1,6 +1,10 @@
 const router = require("express").Router();
 const db     = require("../db");
 
+// Телефон сравниваем по цифрам — устойчиво к пробелам, +, дефисам, неразрывным
+// пробелам и прочему «мусору» из ввода/копипаста.
+const digits = s => String(s || "").replace(/\D/g, "");
+
 // Вход администратора или врача
 router.post("/login", async (req, res) => {
   try {
@@ -26,10 +30,12 @@ router.post("/patient", async (req, res) => {
     const { iin, phone } = req.body;
     if (!iin || !phone) return res.status(400).json({ error: "Введите ИИН и телефон" });
 
-    const [rows] = await db.query(
-      "SELECT * FROM patients WHERE iin = ? AND phone = ? ORDER BY appointmentDate DESC",
-      [iin, phone]
+    const iinClean = String(iin).trim();
+    const [all] = await db.query(
+      "SELECT * FROM patients WHERE TRIM(iin) = ? ORDER BY appointmentDate DESC",
+      [iinClean]
     );
+    const rows = all.filter(r => digits(r.phone) === digits(phone));
     if (rows.length === 0) return res.status(401).json({ error: "Запись с таким ИИН и телефоном не найдена" });
 
     const p = rows[0];
@@ -37,8 +43,8 @@ router.post("/patient", async (req, res) => {
       ok: true,
       role: "patient",
       name: `${p.lastName} ${p.firstName} ${p.middleName}`.trim(),
-      iin,
-      phone,
+      iin: iinClean,
+      phone: p.phone,
       appointments: rows,
     });
   } catch (e) {
@@ -50,11 +56,11 @@ router.post("/patient", async (req, res) => {
 router.get("/my-appointments", async (req, res) => {
   try {
     const { iin, phone } = req.query;
-    const [rows] = await db.query(
-      "SELECT * FROM patients WHERE iin = ? AND phone = ? ORDER BY appointmentDate DESC",
-      [iin, phone]
+    const [all] = await db.query(
+      "SELECT * FROM patients WHERE TRIM(iin) = ? ORDER BY appointmentDate DESC",
+      [String(iin || "").trim()]
     );
-    res.json(rows);
+    res.json(all.filter(r => digits(r.phone) === digits(phone)));
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

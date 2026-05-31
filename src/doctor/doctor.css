@@ -232,6 +232,7 @@ body { font-family: 'Golos Text', sans-serif; background: #f0f4ff; }
   transition: border-color .15s;
 }
 
+.dr-card--confirmed   { border-left-color: #6366f1; }
 .dr-card--waiting     { border-left-color: #f59e0b; }
 .dr-card--in_progress { border-left-color: #3b82f6; }
 .dr-card--completed   { border-left-color: #10b981; }
@@ -305,6 +306,7 @@ body { font-family: 'Golos Text', sans-serif; background: #f0f4ff; }
   white-space: nowrap;
 }
 
+.dr-badge--confirmed   { background: #e0e7ff; color: #4f46e5; }
 .dr-badge--waiting     { background: #fef3c7; color: #d97706; }
 .dr-badge--in_progress { background: #dbeafe; color: #2563eb; }
 .dr-badge--completed   { background: #d1fae5; color: #059669; }
@@ -352,6 +354,7 @@ body { font-family: 'Golos Text', sans-serif; background: #f0f4ff; }
 
 .dr-card__btn:disabled { opacity: .6; cursor: not-allowed; }
 
+.dr-card__btn--confirmed,
 .dr-card__btn--waiting {
   background: #3b82f6;
   color: #fff;

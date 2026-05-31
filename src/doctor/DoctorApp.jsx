@@ -5,9 +5,11 @@ import {
 } from "lucide-react";
 import { api } from "../api";
 import { getUser, clearUser } from "../auth/auth";
+import { fmtDate, todayStr } from "../utils/helpers";
 import "./doctor.css";
 
 const STATUS_LABEL = {
+  confirmed:   "Подтверждён",
   waiting:     "Ожидает",
   in_progress: "На приёме",
   completed:   "Завершён",
@@ -15,11 +17,13 @@ const STATUS_LABEL = {
 };
 
 const STATUS_NEXT = {
+  confirmed:   "in_progress",
   waiting:     "in_progress",
   in_progress: "completed",
 };
 
 const STATUS_BTN = {
+  confirmed:   "Начать приём",
   waiting:     "Начать приём",
   in_progress: "Завершить",
 };
@@ -48,10 +52,10 @@ export default function DoctorApp({ onLogout }) {
       .finally(() => setLoading(false));
   }, [user.name]);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const today = todayStr();
 
-  const todayPts  = patients.filter(p => p.appointmentDate?.slice(0, 10) === todayStr);
-  const otherPts  = patients.filter(p => p.appointmentDate?.slice(0, 10) !== todayStr);
+  const todayPts  = patients.filter(p => (p.appointmentDate || "").slice(0, 10) === today);
+  const otherPts  = patients.filter(p => (p.appointmentDate || "").slice(0, 10) !== today);
   const displayed = tab === "today" ? todayPts : otherPts;
 
   const waiting   = todayPts.filter(p => p.status === "waiting").length;
@@ -170,7 +174,7 @@ export default function DoctorApp({ onLogout }) {
                         {p.lastName} {p.firstName} {p.middleName}
                       </div>
                       <div className="dr-card__meta">
-                        {p.appointmentDate?.slice(0, 10)} · {p.appointmentTime} · {p.complaint}
+                        {fmtDate(p.appointmentDate)} · {p.appointmentTime} · {p.complaint}
                       </div>
                     </div>
                   </div>
@@ -185,7 +189,7 @@ export default function DoctorApp({ onLogout }) {
                     <div className="dr-card__details">
                       <div><span>ИИН</span>{p.iin}</div>
                       <div><span>Телефон</span>{p.phone}</div>
-                      <div><span>Дата рождения</span>{p.birthDate}</div>
+                      <div><span>Дата рождения</span>{fmtDate(p.birthDate)}</div>
                       <div><span>Жалоба</span>{p.complaint}</div>
                     </div>
 
