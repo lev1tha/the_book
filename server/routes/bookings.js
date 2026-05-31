@@ -19,11 +19,12 @@ router.post("/", async (req, res) => {
     // 1. Сохранить в bookings
     const [result] = await db.query(
       `INSERT INTO bookings
-        (lastName, firstName, middleName, phone, email,
+        (lastName, firstName, middleName, iin, phone, email,
          department, doctor, appointmentDate, appointmentTime, complaint)
-       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+       VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
       [
         b.lastName, b.firstName, b.middleName || "",
+        b.iin || "",
         b.phone, b.email || "",
         b.department, b.doctor,
         b.appointmentDate || null, b.appointmentTime,
@@ -35,13 +36,14 @@ router.post("/", async (req, res) => {
     const patientId = "online_" + result.insertId;
     await db.query(
       `INSERT INTO patients
-        (id, lastName, firstName, middleName, gender, phone, email,
+        (id, lastName, firstName, middleName, gender, iin, phone, email,
          department, doctor, appointmentDate, appointmentTime,
          complaint, status, queueNum, source)
-       VALUES (?,?,?,?,'unknown',?,?,?,?,?,?,?,'confirmed',0,'online')`,
+       VALUES (?,?,?,?,'unknown',?,?,?,?,?,?,?,?,'confirmed',0,'online')`,
       [
         patientId,
         b.lastName, b.firstName, b.middleName || "",
+        b.iin || "",
         b.phone, b.email || "",
         b.department, b.doctor,
         b.appointmentDate || null, b.appointmentTime,

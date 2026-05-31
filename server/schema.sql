@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   lastName        VARCHAR(100),
   firstName       VARCHAR(100),
   middleName      VARCHAR(100) DEFAULT '',
+  iin             VARCHAR(20)  DEFAULT '',
   phone           VARCHAR(30),
   email           VARCHAR(100) DEFAULT '',
   department      VARCHAR(100),
