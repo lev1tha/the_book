@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    paths-ignore: ['**/*.md', 'docs/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/master' }}
+
+jobs:
+  frontend:
+    name: Frontend (build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Build
+        run: npm run build
+
+  server:
+    name: Server (syntax + startup smoke test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Syntax check
+        run: find . -name '*.js' -not -path './node_modules/*' -print0 | xargs -0 -n1 node --check
+
+      # No MySQL in CI: the app only logs the DB connection error at startup,
+      # so this checks that all modules load and the HTTP server answers.
+      - name: Startup smoke test (GET /api/health)
+        env:
+          PORT: 5001
+        run: |
+          node index.js > server.log 2>&1 &
+          SERVER_PID=$!
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:5001/api/health; then
+              kill "$SERVER_PID"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server did not answer on /api/health"
+          cat server.log
+          exit 1
